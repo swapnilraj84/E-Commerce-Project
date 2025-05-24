@@ -12,6 +12,11 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Post('signup')
+  async signup(@Body() body:any){
+    return await this.usersService.signup(body);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();
