@@ -28,17 +28,29 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async signin(usersignin: UserSignin): Promise<UserEntity>{
-    const userexists = await this.finduserbyemail(usersignin.email);
-    if (!userexists) {
-      throw new BadRequestException('User does not exist with this email');
-    }
-    const matchpassword = await compare (usersignin.password, userexists.password);
-    if( !matchpassword){
-      throw new BadRequestException('Password is incorrect');
-    }
-    return userexists;
+  async signin(usersignin: UserSignin){
+  const userexists = await this.finduserbyemail(usersignin.email);
+  if (!userexists) {
+    throw new BadRequestException('User does not exist with this email');
   }
+  
+  console.log('Password from request:', usersignin.password);
+  console.log('Password from database:', userexists.password);
+  
+  if (!usersignin.password) {
+    throw new BadRequestException('Password is required in request');
+  }
+  
+  if (!userexists.password) {
+    throw new BadRequestException('No password found for this user in database');
+  }
+  
+  const matchpassword = await compare(usersignin.password, userexists.password);
+  if(!matchpassword){
+    throw new BadRequestException('Password is incorrect');
+  }
+  return userexists;
+}
 
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
@@ -61,7 +73,10 @@ export class UsersService {
   }
 
   async finduserbyemail(email:string){
-    return await this.userRepository.findOneBy({email});
+    return await this.userRepository.findOne({
+    where: { email },
+    select: ['id', 'email', 'name', 'password', 'roles', 'createdAt', 'updatedAt']
+  });
   }
 
 async accessToken(user: UserEntity) {
